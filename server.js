@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 
@@ -11,6 +12,7 @@ app.use(cors({
 
 app.options('*', cors());
 app.use(express.json({ limit: '50mb' }));
+app.use(express.static(path.join(__dirname)));
 
 const MODEL = 'gemini-3.1-pro-preview';
 
