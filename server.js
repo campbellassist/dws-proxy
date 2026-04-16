@@ -70,7 +70,7 @@ app.post('/analyze', async (req, res) => {
               { text: PROMPT }
             ]
           }],
-          generationConfig: { maxOutputTokens: 1024 }
+          generationConfig: { maxOutputTokens: 2048 }
         })
       }
     );
@@ -83,11 +83,37 @@ app.post('/analyze', async (req, res) => {
       return res.status(500).json({ error: data.error.message });
     }
 
-    const raw = (data.candidates?.[0]?.content?.parts?.[0]?.text || '{}')
-      .replace(/```json|```/g, '').trim();
-
+    let raw = (data.candidates?.[0]?.content?.parts?.[0]?.text || '{}');
     console.log('Raw Gemini output:', raw);
-    res.json(JSON.parse(raw));
+
+    // Strip markdown fences
+    raw = raw.replace(/```json|```/g, '').trim();
+
+    // Extract just the JSON object if there's surrounding text
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('No JSON object found in Gemini response');
+    raw = jsonMatch[0];
+
+    // Attempt to fix truncated JSON by closing open strings/brackets
+    try {
+      res.json(JSON.parse(raw));
+    } catch(parseErr) {
+      // Try to salvage truncated JSON
+      let fixed = raw;
+      // Count open braces/brackets
+      const opens = (fixed.match(/\{/g) || []).length;
+      const closes = (fixed.match(/\}/g) || []).length;
+      // Close any unterminated string
+      if (fixed.match(/"[^"]*$/)) fixed += '"';
+      // Close any missing braces
+      for (let i = 0; i < opens - closes; i++) fixed += '}';
+      try {
+        res.json(JSON.parse(fixed));
+      } catch(e) {
+        // Return safe fallback
+        res.json({ accountName:'', institution:'', documentType:'', last4:'', date:'', confidence:'low', notes:'Could not parse Gemini response. Please fill in fields manually.' });
+      }
+    }
 
   } catch (err) {
     console.error('Server error:', err.message);
