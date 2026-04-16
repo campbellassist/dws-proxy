@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DWS Document Renamer — GenCrest Capital Partners</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #1a2744; --navy-light: #243260;
+    --gold: #b89c5a; --gold-light: #d4b87a; --gold-pale: #f5f0e6;
+    --white: #ffffff; --gray-50: #f8f8f6;
+    --gray-200: #e2dfd8; --gray-400: #9e9b93; --gray-600: #5a5852; --gray-800: #2e2c28;
+    --success-bg: #eaf3de; --success: #3b6d11;
+    --warn-bg: #faeeda; --warn: #854f0b;
+    --danger-bg: #fcebeb; --danger: #a32d2d;
+    --radius: 10px; --radius-sm: 6px;
+    --shadow: 0 1px 4px rgba(26,39,68,0.07), 0 4px 16px rgba(26,39,68,0.06);
+  }
+  body { font-family: Georgia,'Times New Roman',serif; background: var(--gray-50); color: var(--gray-800); min-height: 100vh; display: flex; flex-direction: column; }
+  header { background: var(--navy); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 64px; border-bottom: 2px solid var(--gold); flex-shrink: 0; }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-mark { width: 36px; height: 36px; background: var(--gold); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: var(--navy); flex-shrink: 0; }
+  .logo-text .firm { font-size: 13px; font-weight: 700; color: var(--white); letter-spacing: 0.5px; display: block; }
+  .logo-text .sub  { font-size: 10px; color: var(--gold-light); letter-spacing: 1.5px; text-transform: uppercase; font-family: Arial,sans-serif; display: block; }
+  .header-badge { font-family: Arial,sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--gold-light); border: 1px solid var(--gold); padding: 4px 10px; border-radius: 3px; }
+  .hero { background: var(--navy); padding: 2.5rem 2rem 2rem; text-align: center; border-bottom: 1px solid var(--gold); }
+  .hero-eyebrow { font-family: Arial,sans-serif; font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold-light); margin-bottom: 10px; }
+  .hero h1 { font-size: 24px; color: var(--white); font-weight: normal; margin-bottom: 8px; }
+  .hero h1 span { color: var(--gold-light); }
+  .hero p { font-family: Arial,sans-serif; font-size: 12px; color: rgba(255,255,255,0.6); max-width: 480px; margin: 0 auto; line-height: 1.6; }
+  .sop-bar { background: var(--gold-pale); border-bottom: 1px solid var(--gray-200); padding: 9px 2rem; text-align: center; }
+  .sop-bar span { font-family: Arial,sans-serif; font-size: 11px; color: var(--gray-600); margin-right: 8px; }
+  .sop-bar code { font-family: 'Courier New',monospace; font-size: 11px; color: var(--navy); background: rgba(26,39,68,0.07); padding: 2px 8px; border-radius: 3px; }
+  main { flex: 1; max-width: 860px; width: 100%; margin: 0 auto; padding: 1.5rem; }
+  .dropzone { border: 2px dashed var(--gold); border-radius: var(--radius); background: var(--white); padding: 2rem; text-align: center; cursor: pointer; transition: background 0.15s, border-color 0.15s; margin-bottom: 1.5rem; }
+  .dropzone:hover, .dropzone.drag-over { background: var(--gold-pale); border-color: var(--navy); }
+  .dz-icon { width: 40px; height: 40px; background: var(--gold-pale); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
+  .dz-icon svg { width: 20px; height: 20px; fill: var(--gold); }
+  .dropzone h3 { font-size: 14px; color: var(--navy); margin-bottom: 4px; font-weight: normal; }
+  .dropzone p { font-family: Arial,sans-serif; font-size: 12px; color: var(--gray-400); }
+  .browse { color: var(--gold); text-decoration: underline; }
+  .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .toolbar h2 { font-size: 14px; color: var(--navy); font-weight: normal; }
+  .btn-primary { font-family: Arial,sans-serif; font-size: 12px; font-weight: 600; background: var(--navy); color: var(--white); border: none; padding: 7px 16px; border-radius: var(--radius-sm); cursor: pointer; }
+  .btn-primary:hover { background: var(--navy-light); }
+  .file-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); margin-bottom: 1rem; overflow: hidden; box-shadow: var(--shadow); }
+  .card-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: var(--navy); }
+  .card-head-left .orig { font-family: Arial,sans-serif; font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 2px; }
+  .card-head-left .status-txt { font-family: Arial,sans-serif; font-size: 12px; color: var(--white); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .badge { font-family: Arial,sans-serif; font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+  .badge-high    { background: var(--success-bg); color: var(--success); }
+  .badge-medium  { background: var(--warn-bg);    color: var(--warn); }
+  .badge-low     { background: var(--danger-bg);  color: var(--danger); }
+  .badge-error   { background: var(--danger-bg);  color: var(--danger); }
+  .badge-reading { background: var(--gold-pale);  color: var(--navy); }
+  .card-body { padding: 16px; }
+  .fields-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 12px; }
+  .field label { display: block; font-family: Arial,sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--gray-400); margin-bottom: 4px; }
+  .field input { width: 100%; font-family: Arial,sans-serif; font-size: 12px; padding: 6px 9px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); color: var(--gray-800); background: var(--gray-50); outline: none; transition: border-color 0.15s; }
+  .field input:focus { border-color: var(--gold); background: var(--white); }
+  .filename-row { background: var(--gold-pale); border: 1px solid var(--gold); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+  .filename-row label { font-family: Arial,sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--gray-600); white-space: nowrap; flex-shrink: 0; }
+  .filename-row input { flex: 1; font-family: 'Courier New',monospace; font-size: 12px; font-weight: 700; color: var(--navy); background: transparent; border: none; outline: none; min-width: 0; }
+  .filename-row .ext { font-family: Arial,sans-serif; font-size: 11px; color: var(--gray-400); flex-shrink: 0; }
+  .card-actions { display: flex; gap: 8px; }
+  .btn-dl { font-family: Arial,sans-serif; font-size: 12px; font-weight: 600; background: var(--gold); color: var(--navy); border: none; padding: 7px 16px; border-radius: var(--radius-sm); cursor: pointer; }
+  .btn-dl:hover { background: var(--gold-light); }
+  .btn-remove { font-family: Arial,sans-serif; font-size: 12px; color: var(--gray-400); background: none; border: 1px solid var(--gray-200); padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer; }
+  .btn-remove:hover { color: var(--danger); border-color: var(--danger); }
+  .card-note { font-family: Arial,sans-serif; font-size: 11px; color: var(--gray-600); margin-bottom: 10px; font-style: italic; }
+  .card-loading { padding: 16px; font-family: Arial,sans-serif; font-size: 13px; color: var(--gray-600); display: flex; align-items: center; gap: 8px; }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.25); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+  .spinner-dark { border-color: rgba(26,39,68,0.15); border-top-color: var(--navy); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  footer { background: var(--navy); border-top: 1px solid var(--gold); padding: 12px 2rem; text-align: center; }
+  footer p { font-family: Arial,sans-serif; font-size: 10px; color: rgba(255,255,255,0.4); }
+  footer span { color: var(--gold-light); }
+  @media (max-width: 600px) {
+    .hero h1 { font-size: 20px; }
+    .fields-grid { grid-template-columns: 1fr 1fr; }
+    .header-badge { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">GC</div>
+    <div class="logo-text">
+      <span class="firm">GenCrest Capital Partners</span>
+      <span class="sub">Multi-Family Office</span>
+    </div>
+  </div>
+  <div class="header-badge">Internal Tools</div>
+</header>
+
+<div class="hero">
+  <div class="hero-eyebrow">DWS Document Workflow System</div>
+  <h1>Document <span>Renaming</span> Tool</h1>
+  <p>Upload financial PDFs — Gemini 3.1 Pro extracts key fields and generates a compliant filename per the DWS Standard Operating Procedure.</p>
+</div>
+
+<div class="sop-bar">
+  <span>Convention:</span>
+  <code>AccountName_Institution_DocumentType_xLast4_MM.DD.YYYY</code>
+</div>
+
+<main>
+  <div class="dropzone" id="dropzone"
+    onclick="document.getElementById('fileInput').click()"
+    ondragover="dzEv(event,'drag-over',true)"
+    ondragleave="dzEv(event,'drag-over',false)"
+    ondrop="onDrop(event)">
+    <div class="dz-icon">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11zM8 15h8v1H8zm0-3h8v1H8zm0-3h5v1H8z"/></svg>
+    </div>
+    <h3>Drop PDF files here</h3>
+    <p>or <span class="browse">browse to upload</span> — multiple files supported</p>
+    <input type="file" id="fileInput" accept=".pdf" multiple style="display:none" onchange="handleFiles(this.files)" />
+  </div>
+
+  <div id="toolbar" style="display:none" class="toolbar">
+    <h2 id="toolbar-label"></h2>
+    <button class="btn-primary" onclick="downloadAll()">Download all renamed files</button>
+  </div>
+
+  <div id="fileList"></div>
+</main>
+
+<footer>
+  <p>GenCrest Capital Partners &nbsp;|&nbsp; <span>Internal Use Only</span> &nbsp;|&nbsp; DWS Document Workflow System &nbsp;|&nbsp; Powered by Gemini 3.1 Pro</p>
+</footer>
+
+<script>
+const PROXY = '';  // Empty = same origin (served from Render)
+let files = {};
+let queue = [];
+let processing = false;
+
+function dzEv(e, cls, add) { e.preventDefault(); document.getElementById('dropzone').classList.toggle(cls, add); }
+function onDrop(e) { e.preventDefault(); document.getElementById('dropzone').classList.remove('drag-over'); handleFiles(e.dataTransfer.files); }
+function handleFiles(list) { Array.from(list).filter(f => f.type === 'application/pdf').forEach(processFile); }
+
+function processFile(file) {
+  const id = Math.random().toString(36).slice(2);
+  files[id] = { id, file, originalName: file.name, status: 'queued', fields: { accountName:'', institution:'', documentType:'', last4:'', date:'' }, filename:'', notes:'', confidence:'' };
+  renderCard(id);
+  queue.push(id);
+  runQueue();
+}
+
+async function runQueue() {
+  if (processing) return;
+  if (queue.length === 0) return;
+  processing = true;
+  while (queue.length > 0) {
+    const id = queue.shift();
+    if (!files[id]) continue;
+    files[id].status = 'reading';
+    renderCard(id);
+    await analyzeFile(id);
+    await new Promise(r => setTimeout(r, 500));
+  }
+  processing = false;
+}
+
+function buildName(f) {
+  const p = [];
+  if (f.accountName) p.push(f.accountName);
+  if (f.institution)  p.push(f.institution);
+  if (f.documentType) p.push(f.documentType);
+  if (f.last4)        p.push('x' + f.last4);
+  if (f.date)         p.push(f.date);
+  return p.join('_').replace(/[\/\\:*?"<>|]/g, '');
+}
+
+async function analyzeFile(id) {
+  const entry = files[id];
+  try {
+    const b64 = await toBase64(entry.file);
+    const resp = await fetch('/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ b64, mimeType: 'application/pdf' })
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error || 'HTTP ' + resp.status);
+    }
+    const p = await resp.json();
+    if (p.error) throw new Error(p.error);
+    entry.fields = { accountName: p.accountName||'', institution: p.institution||'', documentType: p.documentType||'', last4: p.last4||'', date: p.date||'' };
+    entry.filename = buildName(entry.fields);
+    entry.notes = p.notes || '';
+    entry.confidence = p.confidence || 'medium';
+    entry.status = 'ready';
+  } catch(err) {
+    entry.status = 'error';
+    entry.notes = err.message;
+  }
+  renderCard(id);
+  updateToolbar();
+}
+
+function toBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = () => rej(new Error('Read failed'));
+    r.readAsDataURL(file);
+  });
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function renderCard(id) {
+  const e = files[id];
+  let el = document.getElementById('card-' + id);
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'card-' + id;
+    el.className = 'file-card';
+    document.getElementById('fileList').prepend(el);
+  }
+  const isQueued  = e.status === 'queued';
+  const isReading = e.status === 'reading';
+  const isError   = e.status === 'error';
+  const badgeCls  = isQueued || isReading ? 'badge-reading' : isError ? 'badge-error' : ('badge-' + (e.confidence||'medium'));
+  const badgeTxt  = isQueued ? 'Queued' : isReading ? 'Analyzing…' : isError ? 'Error' : (e.confidence + ' confidence');
+
+  let body = '';
+  if (isQueued) {
+    body = `<div class="card-loading" style="color:var(--gray-400)">⏳ Waiting in queue…</div>`;
+  } else if (isReading) {
+    body = `<div class="card-loading"><span class="spinner spinner-dark"></span> Reading document and extracting fields…</div>`;
+  } else if (isError) {
+    body = `<div class="card-loading" style="color:var(--danger)">Could not process: ${esc(e.notes)}</div>`;
+  } else {
+    const flds = [
+      { key:'accountName', label:'Account owner',   placeholder:'H / W / JT / Entity or blank' },
+      { key:'institution',  label:'Institution',     placeholder:'e.g. Stifel Solutions Managed Account' },
+      { key:'documentType', label:'Document type',   placeholder:'e.g. Statement' },
+      { key:'last4',        label:'Last 4 digits',   placeholder:'e.g. 3209' },
+      { key:'date',         label:'Date MM.DD.YYYY', placeholder:'01.31.2026' },
+    ];
+    body = `<div class="card-body">
+      <div class="fields-grid">${flds.map(f=>`<div class="field"><label>${f.label}</label><input value="${esc(e.fields[f.key])}" placeholder="${f.placeholder}" oninput="updateField('${id}','${f.key}',this.value)"/></div>`).join('')}</div>
+      ${e.notes?`<div class="card-note">Note: ${esc(e.notes)}</div>`:''}
+      <div class="filename-row">
+        <label>Renamed file</label>
+        <input id="fn-${id}" value="${esc(e.filename)}" oninput="files['${id}'].filename=this.value"/>
+        <span class="ext">.pdf</span>
+      </div>
+      <div class="card-actions">
+        <button class="btn-dl" onclick="downloadFile('${id}')">Download renamed file</button>
+        <button class="btn-remove" onclick="removeCard('${id}')">Remove</button>
+      </div>
+    </div>`;
+  }
+
+  el.innerHTML = `
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="orig">${esc(e.originalName)}</div>
+        <div class="status-txt">${isReading?'<span class="spinner"></span>':''}${isQueued?'In queue…':isReading?'Analyzing…':isError?'Processing error':'Ready to download'}</div>
+      </div>
+      <span class="badge ${badgeCls}">${badgeTxt}</span>
+    </div>${body}`;
+}
+
+function updateField(id, key, val) {
+  files[id].fields[key] = val;
+  const fn = buildName(files[id].fields);
+  files[id].filename = fn;
+  const inp = document.getElementById('fn-' + id);
+  if (inp) inp.value = fn;
+}
+
+function removeCard(id) {
+  delete files[id];
+  const el = document.getElementById('card-' + id);
+  if (el) el.remove();
+  updateToolbar();
+}
+
+async function downloadFile(id) {
+  const e = files[id];
+  const bytes = await e.file.arrayBuffer();
+  const blob = new Blob([bytes], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (e.filename || 'renamed') + '.pdf';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function updateToolbar() {
+  const ready = Object.values(files).filter(e => e.status === 'ready');
+  const bar = document.getElementById('toolbar');
+  bar.style.display = ready.length > 1 ? 'flex' : 'none';
+  document.getElementById('toolbar-label').textContent = ready.length + ' files ready';
+}
+
+function downloadAll() {
+  Object.values(files).filter(e => e.status === 'ready').forEach((e, i) => setTimeout(() => downloadFile(e.id), i * 150));
+}
+</script>
+</body>
+</html>
