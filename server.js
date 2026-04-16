@@ -70,7 +70,7 @@ app.post('/analyze', async (req, res) => {
               { text: PROMPT }
             ]
           }],
-          generationConfig: { maxOutputTokens: 512 }
+          generationConfig: { maxOutputTokens: 1024 }
         })
       }
     );
