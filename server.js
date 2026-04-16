@@ -2,20 +2,19 @@ const express = require('express');
 const cors = require('cors');
 
 const app = express();
-app.use(cors());
+
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type']
+}));
+
+app.options('*', cors());
 app.use(express.json({ limit: '50mb' }));
 
 const MODEL = 'gemini-3.1-pro-preview';
-const API_KEY = process.env.GEMINI_API_KEY;
 
-app.post('/analyze', async (req, res) => {
-  try {
-    if (!API_KEY) return res.status(500).json({ error: 'GEMINI_API_KEY not set in environment' });
-
-    const { b64, mimeType } = req.body;
-    if (!b64) return res.status(400).json({ error: 'Missing b64 field' });
-
-    const PROMPT = `You are a forensic document naming assistant for a multi-family office. Analyze this PDF and extract fields for the filename convention:
+const PROMPT = `You are a forensic document naming assistant for a multi-family office. Analyze this PDF and extract fields for the filename convention:
 
 AccountName_Institution_DocumentType_xLast4_MM.DD.YYYY
 
@@ -32,13 +31,32 @@ FIELD RULES:
 1. accountName: H | W | JT | EntityName | ""
 2. institution: Full name + account type (e.g. "Stifel Solutions Managed Account", "Truist Savings", "Wells Fargo Checking")
 3. documentType: Statement, Check, Bill, Invoice, Receipt, Confirmation, etc.
-4. last4: Account number last 4 digits — look in the header of page 1 near "Account Number". Strip ALL dashes, spaces, asterisks, and x characters first, then take the last 4 digits of the remaining string. Return digits only, no prefix. "" if not found.
+4. last4: Account number last 4 digits — look in the header of page 1 near "Account Number". Strip ALL dashes, spaces, asterisks, and x characters first, then take the last 4 digits. Digits only, no prefix. "" if not found.
 5. date: Closing date for statements, document date for all others. Format MM.DD.YYYY with leading zeros.
 6. confidence: "high" | "medium" | "low"
 7. notes: Brief note on accountName determination or uncertain fields. "" if none.
 
-Return ONLY valid JSON — no markdown fences, no explanation, no other text:
+Return ONLY valid JSON — no markdown fences, no explanation:
 {"accountName":"","institution":"","documentType":"","last4":"","date":"","confidence":"high","notes":""}`;
+
+app.get('/', (req, res) => {
+  const keySet = !!process.env.GEMINI_API_KEY;
+  res.json({ status: 'DWS Proxy OK', apiKeySet: keySet, model: MODEL });
+});
+
+app.post('/analyze', async (req, res) => {
+  try {
+    const API_KEY = process.env.GEMINI_API_KEY;
+    if (!API_KEY) {
+      return res.status(500).json({ error: 'GEMINI_API_KEY environment variable is not set on the server.' });
+    }
+
+    const { b64, mimeType } = req.body;
+    if (!b64) {
+      return res.status(400).json({ error: 'Missing b64 field in request body.' });
+    }
+
+    console.log(`Analyzing document, size: ${b64.length} chars`);
 
     const geminiRes = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`,
@@ -58,18 +76,24 @@ Return ONLY valid JSON — no markdown fences, no explanation, no other text:
     );
 
     const data = await geminiRes.json();
-    if (data.error) return res.status(500).json({ error: data.error.message });
+    console.log('Gemini response status:', geminiRes.status);
+
+    if (data.error) {
+      console.error('Gemini error:', data.error);
+      return res.status(500).json({ error: data.error.message });
+    }
 
     const raw = (data.candidates?.[0]?.content?.parts?.[0]?.text || '{}')
       .replace(/```json|```/g, '').trim();
 
+    console.log('Raw Gemini output:', raw);
     res.json(JSON.parse(raw));
+
   } catch (err) {
+    console.error('Server error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-app.get('/', (req, res) => res.send('DWS Proxy OK'));
-
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Proxy running on port ${PORT}`));
+app.listen(PORT, () => console.log(`DWS Proxy running on port ${PORT}`));
